@@ -1,0 +1,13 @@
+<launch>
+
+    <node pkg="replan_fsm" type="regenerate_target_node" name="" output="screen">
+        <param name="kp" value="1.0"/>
+
+        <param name="ed_left" value="4.62524"/>
+        <param name="ed_right" value="-0.32476"/>
+        <param name="ed_ceil" value="7.63428"/>
+        <param name="ed_floor" value="-0.36572"/>
+        <param name="delay" value="0.5"/>
+    </node>
+
+</launch>
