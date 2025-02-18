@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <ros/ros.h>
+#include <quadrotor_msgs/PositionCommand.h>
 #include <ego_planner/DataDisp.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl/point_cloud.h>
@@ -51,7 +52,7 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
     total_force.x() > ed_ceil ? ed_ceil : total_force.x();
     total_force.x() < ed_floor ? ed_floor : total_force.x();
 
-    ROS_INFO_STREAM("Total repulsive force: " << total_force.transpose());
+    std::cout << "Total repulsive force: " << total_force.transpose() << std::endl;
     
     geometry_msgs::PoseStamped goal;
     goal.pose.position.x = total_force.x();
@@ -68,7 +69,7 @@ void fsm_cbk(const ego_planner::DataDisp::ConstPtr &msg)
         pose(0) = msg->b;
         pose(1) = msg->c;
         pose(2) = 0;
-        ROS_INFO("Emergency Flag Received, Regenerating target!!!")
+        ROS_INFO("Emergency Flag Received, Regenerating target!!!");
     }
 }
 
@@ -86,7 +87,7 @@ void goal_cbk(const geometry_msgs::PoseStamped::ConstPtr &msg)
     }
 }
 
-int main(int argc, const *argv[])
+int main(int argc, char *argv[])
 {
     ros::init(argc, argv, "regenerate_target_node");
     ros::NodeHandle nh("~");
