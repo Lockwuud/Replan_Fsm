@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-02-20 10:11:55
+ * @LastEditTime : 2025-02-20 19:37:02
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 
@@ -54,47 +54,75 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             Eigen::Vector3f preset_force(0.0, 0.0, 0.0);
             switch(diraction){
                 case UPLEFT:
-                    preset_force.x() = 1;
-                    preset_force.y() = 1;
+                    preset_force.x() = sqrt1_2 * kp2;
+                    preset_force.y() = sqrt1_2 * kp2;
                     break;
                 case UPRIGHT:
-                    preset_force.x() = 1;
-                    preset_force.y() = -1;
+                    preset_force.x() = sqrt1_2 * kp2;
+                    preset_force.y() = -sqrt1_2 * kp2;
                     break;
                 case DOWNLEFT:
-                    preset_force.x() = -1;
-                    preset_force.y() = 1;
+                    preset_force.x() = -sqrt1_2 * kp2;
+                    preset_force.y() = sqrt1_2 * kp2;
                     break;
                 case DOWNRIGHT:
-                    preset_force.x() = -1;
-                    preset_force.y() = -1;
+                    preset_force.x() = -sqrt1_2 * kp2;
+                    preset_force.y() = -sqrt1_2 * kp2;
                     break;
                 case LEFT:
                     preset_force.x() = 0;
-                    preset_force.y() = 1;
+                    preset_force.y() = kp2;
                     break;
                 case RIGHT:
                     preset_force.x() = 0;
-                    preset_force.y() = -1;
+                    preset_force.y() = -kp2;
                     break;
                 case DOWN:
-                    preset_force.x() = -1;
+                    preset_force.x() = -kp2;
                     preset_force.y() = 0;
                     break;
                 default:
                     break;
             }
+            
+            // 半径搜索
+            pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>(cloud));
+            kdtree.setInputCloud(cloud_ptr);
+            pcl::PointXYZ searchPoint;
+            searchPoint.x = pose.x();
+            searchPoint.y = pose.y();
+            searchPoint.z = 0;
+
+            std::vector<int> pointIdxRadiusSearch;
+            std::vector<float> pointRadiusSquaredDistance;
+
+            // if ( kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
+            // {
+            //     for (std::size_t i = 0; i < pointIdxRadiusSearch.size (); ++i)
+            //     {
+            //         Eigen::Vector3f point_vec((*cloud)[ pointIdxRadiusSearch[i] ].x, (*cloud)[ pointIdxRadiusSearch[i] ].y, (*cloud)[ pointIdxRadiusSearch[i] ].z);
+            //         point_vec -= pose;
+            //         float distance = point_vec.norm();
+            //         if (distance == 0) continue;
+            //         Eigen::Vector3f repulsive_force = point_vec / (distance * distance);
+            //         total_force += repulsive_force;
+            //     }
+            // }
         
-            for (const auto& point : cloud.points) {
-                Eigen::Vector3f point_vec(point.x, point.y, point.z);
-                point_vec -= pose;
-                float distance = point_vec.norm();
-                if (distance == 0) continue; // Avoid division by zero
-        
-                Eigen::Vector3f repulsive_force = point_vec / (distance * distance);
-                total_force += repulsive_force;
+            if ( kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
+                for (const auto& point : cloud.points) {
+                    Eigen::Vector3f point_vec(point.x, point.y, point.z);
+                    point_vec -= pose;
+                    float distance = point_vec.norm();
+                    if (distance == 0) continue; // Avoid division by zero
+            
+                    Eigen::Vector3f repulsive_force = point_vec / (distance * distance);
+                    total_force += repulsive_force;
+                }
             }
-        
+
+            total_force += preset_force;
             total_force += pose;
             total_force *= kp2;
              
@@ -137,7 +165,7 @@ int main(int argc, char *argv[])
     ros::param::get("ed_right", ed_right);
     ros::param::get("ed_ceil", ed_ceil);
     ros::param::get("ed_floor", ed_floor);
-    ros::param::get("delay", delay);
+    ros::param::get("radius", radius);
 
     ros::Subscriber sub_cloud = nh.subscribe("/cloud_withoutedge", 1, cloud_cbk);
     ros::Subscriber sub_fsm = nh.subscribe("/planning/data_display", 1, fsm_cbk);

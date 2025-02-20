@@ -8,7 +8,8 @@
         <param name="ed_right" value="-0.32476"/>
         <param name="ed_ceil" value="7.63428"/>
         <param name="ed_floor" value="-0.36572"/>
-        <param name="delay" value="0.5"/>
+        
+        <param name="radius" value="1.5"/>      <!-- 搜索半径 -->
     </node>
 
 </launch>

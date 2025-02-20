@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-02-20 10:18:53
+ * @LastEditTime : 2025-02-20 19:19:47
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 #ifndef SHARED_STATUS_HPP
@@ -27,7 +27,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Core>
 
-#define sqrt2 1.41421356237 
+#define sqrt1_2 0.707106781
 
 enum Status {
     CALL,
@@ -54,7 +54,7 @@ inline Diraction diraction;
 
 inline float kp1, kp2;
 inline float ed_left, ed_right, ed_ceil, ed_floor;
-inline float delay;
+inline float radius;
 
 inline Eigen::Vector3f pose;
 
