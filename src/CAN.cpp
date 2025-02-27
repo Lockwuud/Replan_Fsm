@@ -278,13 +278,13 @@ void usbCANFD::stopReceivingData() {
  */
 void usbCANFD::parseCanMessage(const canfd_frame &frame) 
 {
-    std::lock_guard<std::mutex> lock(parseMutex); 
-    std::cout << "Received CAN ID: " << frame.can_id << std::endl;  
-    std::cout << "Data: ";
-    for (int i = 0; i < frame.len; ++i) { 
-        std::cout << std::hex << (int)frame.data[i] << " "; 
-    }
-    std::cout << std::endl;
+    // std::lock_guard<std::mutex> lock(parseMutex); 
+    // std::cout << "Received CAN ID: " << frame.can_id << std::endl;  
+    // std::cout << "Data: ";
+    // for (int i = 0; i < frame.len; ++i) { 
+    //     std::cout << std::hex << (int)frame.data[i] << " "; 
+    // }
+    // std::cout << std::endl;
 
     switch (frame.can_id)
     {
@@ -308,12 +308,38 @@ void usbCANFD::parseCanMessage(const canfd_frame &frame)
 void usbCANFD::customReceive_1(const canfd_frame &frame)
 {
     receiveData.clear();
-    uint32_t n;
-    memcpy(&n, &frame.data[0], 4);
-    memcpy(&pose(0), &frame.data[4], 4);
-    memcpy(&pose(1), &frame.data[8], 4);
+    uint8_t n;
+    memcpy(&n, &frame.data[0], 1);
+    memcpy(&pose(0), &frame.data[1], 4);
+    memcpy(&pose(1), &frame.data[5], 4);
     pose(2) = 0;
-    diraction = (Diraction)n;
+    switch (n)
+    {
+    case 0x1:
+        diraction = UPLEFT;
+        break;
+    case 0x2:
+        diraction = UPRIGHT;
+        break;
+    case 0x3:
+        diraction = DOWNLEFT;
+        break;
+    case 0x4:
+        diraction = DOWNRIGHT;
+        break;
+    case 0x5:
+        diraction = LEFT;
+        break;
+    case 0x6:
+        diraction = RIGHT;
+        break;
+    case 0x7:
+        diraction = DOWN;
+        break;
+    default:
+        ROS_INFO("!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        break;
+    }
     status = CALL;
 }
 

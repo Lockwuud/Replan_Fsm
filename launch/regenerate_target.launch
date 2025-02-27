@@ -2,12 +2,13 @@
 
     <node pkg="replan_fsm" type="regenerate_target_node" name="" output="screen">
         <param name="kp1" value="1.0"/>         <!-- 斥力系数 -->
-        <param name="kp2" value="1.0"/>         <!-- 引力向量长度，即平移距离（m）-->
+        <param name="kp2" value="2.0"/>         <!-- 引力向量长度，即平移距离（m）-->
+        <param name="kp3" value="2.0"/>
 
-        <param name="ed_left" value="4.62524"/>
-        <param name="ed_right" value="-0.32476"/>
-        <param name="ed_ceil" value="7.63428"/>
-        <param name="ed_floor" value="-0.36572"/>
+        <param name="ed_left" value="7.7175"/>
+        <param name="ed_right" value="-0.2825"/>
+        <param name="ed_ceil" value="14.7175"/>
+        <param name="ed_floor" value="-0.2825"/>
         
         <param name="radius" value="1.5"/>      <!-- 搜索半径 -->
     </node>

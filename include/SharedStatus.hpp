@@ -1,3 +1,11 @@
+/*
+ * @Author: slighty-white 5273495@qq.com
+ * @Date: 2025-02-27 16:55:32
+ * @LastEditors: slighty-white 5273495@qq.com
+ * @LastEditTime: 2025-02-27 22:47:42
+ * @FilePath: /src/Replan_Fsm/include/SharedStatus.hpp
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 /**
  * @FilePath     : /src/Replan_Fsm/include/SharedStatus.hpp
  * @Description  :  
@@ -15,7 +23,7 @@
 
 #include <ros/ros.h>
 #include <quadrotor_msgs/PositionCommand.h>
-#include <ego_planner/DataDisp.h>
+#include <traj_utils/DataDisp.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/PoseStamped.h>
 
@@ -52,7 +60,7 @@ enum Diraction {
 
 inline Diraction diraction;
 
-inline float kp1, kp2;
+inline float kp1, kp2, kp3;
 inline float ed_left, ed_right, ed_ceil, ed_floor;
 inline float radius;
 

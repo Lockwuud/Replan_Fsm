@@ -22,7 +22,7 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
     Eigen::Vector3f total_force(0.0, 0.0, 0.0);
 
     switch(status){
-        case REGENERATE:
+        case 999:
             for (const auto& point : cloud.points) {
                 Eigen::Vector3f point_vec(point.x, point.y, point.z);
                 point_vec -= pose;
@@ -45,7 +45,7 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             
             goal.pose.position.x = total_force.x();
             goal.pose.position.y = total_force.y();
-            goal.pose.position.z = -1;
+            goal.pose.position.z = 0;
             pub.publish(goal);
             status = PUBLISHED;
             break;
@@ -85,70 +85,55 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
                     break;
             }
             
+            total_force += preset_force;
+            total_force += pose;
+
             // 半径搜索
             pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
             pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>(cloud));
             kdtree.setInputCloud(cloud_ptr);
             pcl::PointXYZ searchPoint;
-            searchPoint.x = pose.x();
-            searchPoint.y = pose.y();
+            searchPoint.x = total_force.x();
+            searchPoint.y = total_force.y();
             searchPoint.z = 0;
-
             std::vector<int> pointIdxRadiusSearch;
             std::vector<float> pointRadiusSquaredDistance;
 
-            // if ( kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
-            // {
-            //     for (std::size_t i = 0; i < pointIdxRadiusSearch.size (); ++i)
-            //     {
-            //         Eigen::Vector3f point_vec((*cloud)[ pointIdxRadiusSearch[i] ].x, (*cloud)[ pointIdxRadiusSearch[i] ].y, (*cloud)[ pointIdxRadiusSearch[i] ].z);
-            //         point_vec -= pose;
-            //         float distance = point_vec.norm();
-            //         if (distance == 0) continue;
-            //         Eigen::Vector3f repulsive_force = point_vec / (distance * distance);
-            //         total_force += repulsive_force;
-            //     }
-            // }
-        
-            if ( kdtree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
+            Eigen::Vector3f bias_force(0.0, 0.0, 0.0);
+
+            if (kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
+                ROS_INFO("Have Obstacle! Repush!");
                 for (const auto& point : cloud.points) {
                     Eigen::Vector3f point_vec(point.x, point.y, point.z);
                     point_vec -= pose;
                     float distance = point_vec.norm();
-                    if (distance == 0) continue; // Avoid division by zero
-            
-                    Eigen::Vector3f repulsive_force = point_vec / (distance * distance);
-                    total_force += repulsive_force;
+                    bias_force += point_vec;
                 }
+                total_force += (bias_force / bias_force.norm()) * kp3;
             }
 
-            total_force += preset_force;
-            total_force += pose;
-            total_force *= kp2;
-             
             total_force.y() < ed_right ? ed_right : total_force.y();
             total_force.y() > ed_left ? ed_left : total_force.y();
             total_force.x() > ed_ceil ? ed_ceil : total_force.x();
             total_force.x() < ed_floor ? ed_floor : total_force.x();
         
-            std::cout << "Total repulsive force: " << total_force.transpose() << std::endl;
+            std::cout << "Motion force: " << total_force.transpose() << std::endl;
             
             goal.pose.position.x = total_force.x();
             goal.pose.position.y = total_force.y();
-            goal.pose.position.z = -1;
+            goal.pose.position.z = 0.0;
             pub.publish(goal);
             status = PUBLISHED;
             break;
-
     }
 }
 
-void fsm_cbk(const ego_planner::DataDisp::ConstPtr &msg)
+void fsm_cbk(const traj_utils::DataDisp::ConstPtr &msg)
 {
     if (msg->a > 0) {
         status = EMERGENCY;
-        pose(0) = msg->b;
-        pose(1) = msg->c;
+        pose(0) = float(msg->b);
+        pose(1) = float(msg->c);
         pose(2) = 0;
     }
 }
@@ -161,14 +146,17 @@ int main(int argc, char *argv[])
 
     ros::param::get("kp1", kp1);
     ros::param::get("kp2", kp2);
+    ros::param::get("kp3", kp3);
     ros::param::get("ed_left", ed_left);
     ros::param::get("ed_right", ed_right);
     ros::param::get("ed_ceil", ed_ceil);
     ros::param::get("ed_floor", ed_floor);
     ros::param::get("radius", radius);
 
+    status = WAIT;
+
     ros::Subscriber sub_cloud = nh.subscribe("/cloud_withoutedge", 1, cloud_cbk);
-    ros::Subscriber sub_fsm = nh.subscribe("/planning/data_display", 1, fsm_cbk);
+    // ros::Subscriber sub_fsm = nh.subscribe("/drone_0_planning/data_display", 1, fsm_cbk);
     pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 10);
 
     /* 接收线程 */
@@ -182,27 +170,28 @@ int main(int argc, char *argv[])
             {
                 case CALL:
                     status = RECALL;
-                    ROS_INFO("Received call, waiting for recalling...");
+                    // ROS_INFO("Received call, waiting for recalling...");
                     break;
                 case RECALL:
-                    ROS_INFO("Recalling target...");
+                    // ROS_INFO("Recalling target...");
                     break;
                 case EMERGENCY:
                     status = REGENERATE;
-                    ROS_INFO("Received emergency, waiting for regenerating...");
+                    // ROS_INFO("Received emergency, waiting for regenerating...");
                     break;   
                 case PUBLISHED:
                     status = WAIT;
                     ROS_INFO("Target(%f, %f) published...",goal.pose.position.x, goal.pose.position.y);
                     break;
                 case WAIT:
-                    ROS_INFO("Waiting for new call or emergency...");
+                    // ROS_INFO("Waiting for new call or emergency...");
                     break;
                 case REGENERATE:
-                    ROS_INFO("Regenerating target...");
+                    // ROS_INFO("Regenerating target...");
                     break;
                 default:
                     break;
+                usleep(10000);
             }
             // 接收线程维护
             if (!can.receiverRunning)
