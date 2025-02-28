@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-02-28 08:51:09
+ * @LastEditTime : 2025-02-28 23:39:27
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 
@@ -49,6 +49,9 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             break;
             
         case RECALL:
+            struct timeval sTime, eTime;
+            gettimeofday(&sTime, NULL);
+
             Eigen::Vector3f preset_force(0.0, 0.0, 0.0);
             switch(diraction){
                 case UPLEFT:
@@ -108,6 +111,12 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
                 }
                 total_force += (bias_force / bias_force.norm()) * kp3;
             }
+            
+            gettimeofday(&eTime, NULL);
+            long exeTime = (eTime.tv_sec-sTime.tv_sec)+(eTime.tv_usec-sTime.tv_usec)*1e-6;
+            Eigen::Vector3f speedFeedForward(0,0,0);
+            speedFeedForward = velocity * (float(exeTime) + delay);
+            total_force += speedFeedForward;
 
             total_force.y() < ed_right ? ed_right : total_force.y();
             total_force.y() > ed_left ? ed_left : total_force.y();
@@ -149,6 +158,7 @@ int main(int argc, char *argv[])
     ros::param::get("ed_ceil", ed_ceil);
     ros::param::get("ed_floor", ed_floor);
     ros::param::get("radius", radius);
+    ros::param::get("delay", delay);
 
     status = WAIT;
 

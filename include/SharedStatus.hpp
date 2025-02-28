@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-02-20 19:19:47
+ * @LastEditTime : 2025-02-28 23:10:50
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 #ifndef SHARED_STATUS_HPP
@@ -12,6 +12,8 @@
 
 #include <iostream>
 #include <vector>
+#include <time.h>
+#include <sys/time.h>
 
 #include <ros/ros.h>
 #include <quadrotor_msgs/PositionCommand.h>
@@ -55,7 +57,9 @@ inline Diraction diraction;
 inline float kp1, kp2, kp3;
 inline float ed_left, ed_right, ed_ceil, ed_floor;
 inline float radius;
+inline float delay;
 
 inline Eigen::Vector3f pose;
+inline Eigen::Vector3f velocity;
 
 #endif

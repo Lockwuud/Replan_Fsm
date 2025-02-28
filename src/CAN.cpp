@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-02-19 20:00:08
+ * @LastEditTime : 2025-02-28 23:06:01
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 
@@ -313,33 +313,39 @@ void usbCANFD::customReceive_1(const canfd_frame &frame)
     memcpy(&pose(0), &frame.data[1], 4);
     memcpy(&pose(1), &frame.data[5], 4);
     pose(2) = 0;
-    switch (n)
-    {
-    case 0x1:
-        diraction = UPLEFT;
-        break;
-    case 0x2:
-        diraction = UPRIGHT;
-        break;
-    case 0x3:
-        diraction = DOWNLEFT;
-        break;
-    case 0x4:
-        diraction = DOWNRIGHT;
-        break;
-    case 0x5:
-        diraction = LEFT;
-        break;
-    case 0x6:
-        diraction = RIGHT;
-        break;
-    case 0x7:
-        diraction = DOWN;
-        break;
-    default:
-        ROS_INFO("!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        break;
-    }
+    memcpy(&velocity(0), &frame.data[9], 4);
+    memcpy(&velocity(1), &frame.data[13], 4);
+    velocity(2) = 0;
+
+    diraction = (Diraction)n;   // 看看能不能替代丑陋的switch
+
+    // switch (n)  
+    // {
+    // case 0x1:
+    //     diraction = UPLEFT;
+    //     break;
+    // case 0x2:
+    //     diraction = UPRIGHT;
+    //     break;
+    // case 0x3:
+    //     diraction = DOWNLEFT;
+    //     break;
+    // case 0x4:
+    //     diraction = DOWNRIGHT;
+    //     break;
+    // case 0x5:
+    //     diraction = LEFT;
+    //     break;
+    // case 0x6:
+    //     diraction = RIGHT;
+    //     break;
+    // case 0x7:
+    //     diraction = DOWN;
+    //     break;
+    // default:
+    //     ROS_INFO("!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    //     break;
+    // }
     status = CALL;
 }
 
