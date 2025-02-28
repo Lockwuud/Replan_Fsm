@@ -125,7 +125,7 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
     }
 }
 
-void fsm_cbk(const ego_planner::DataDisp::ConstPtr &msg)
+void fsm_cbk(const traj_utils::DataDisp::ConstPtr &msg)
 {
     if (msg->a > 0) {
         status = EMERGENCY;

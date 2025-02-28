@@ -15,7 +15,7 @@
 
 #include <ros/ros.h>
 #include <quadrotor_msgs/PositionCommand.h>
-#include <ego_planner/DataDisp.h>
+#include <traj_utils/DataDisp.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/PoseStamped.h>
 
