@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-02-20 19:37:02
+ * @LastEditTime : 2025-02-28 08:51:09
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 
@@ -20,21 +20,19 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
     pcl::PointCloud<pcl::PointXYZ> cloud;
     pcl::fromROSMsg(*msg, cloud);
     Eigen::Vector3f total_force(0.0, 0.0, 0.0);
+    Eigen::Vector3f offset_force(0.0, 0.0, 0.0);
 
     switch(status){
-        case 999:
+        case REGENERATE:
             for (const auto& point : cloud.points) {
                 Eigen::Vector3f point_vec(point.x, point.y, point.z);
                 point_vec -= pose;
-                float distance = point_vec.norm();
-                if (distance == 0) continue; // Avoid division by zero
-        
-                Eigen::Vector3f repulsive_force = point_vec / (distance * distance);
-                total_force += repulsive_force;
+                offset_force += point_vec;
             }
+            offset_force = offset_force / offset_force.norm();
+            total_force += offset_force * kp1;
         
             total_force += pose;
-            total_force *= kp1;
             
             total_force.y() < ed_right ? ed_right : total_force.y();
             total_force.y() > ed_left ? ed_left : total_force.y();
@@ -106,7 +104,6 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
                 for (const auto& point : cloud.points) {
                     Eigen::Vector3f point_vec(point.x, point.y, point.z);
                     point_vec -= pose;
-                    float distance = point_vec.norm();
                     bias_force += point_vec;
                 }
                 total_force += (bias_force / bias_force.norm()) * kp3;
@@ -128,7 +125,7 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
     }
 }
 
-void fsm_cbk(const traj_utils::DataDisp::ConstPtr &msg)
+void fsm_cbk(const ego_planner::DataDisp::ConstPtr &msg)
 {
     if (msg->a > 0) {
         status = EMERGENCY;
@@ -156,7 +153,7 @@ int main(int argc, char *argv[])
     status = WAIT;
 
     ros::Subscriber sub_cloud = nh.subscribe("/cloud_withoutedge", 1, cloud_cbk);
-    // ros::Subscriber sub_fsm = nh.subscribe("/drone_0_planning/data_display", 1, fsm_cbk);
+    ros::Subscriber sub_fsm = nh.subscribe("/drone_1_planning/data_display", 1, fsm_cbk);
     pub = nh.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 10);
 
     /* 接收线程 */
