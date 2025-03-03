@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-02-28 23:39:27
+ * @LastEditTime : 2025-03-03 09:31:26
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 
@@ -21,6 +21,15 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
     pcl::fromROSMsg(*msg, cloud);
     Eigen::Vector3f total_force(0.0, 0.0, 0.0);
     Eigen::Vector3f offset_force(0.0, 0.0, 0.0);
+    Eigen::Vector3f bias_force(0.0, 0.0, 0.0);
+
+    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>(cloud));
+    kdtree.setInputCloud(cloud_ptr);
+    pcl::PointXYZ searchPoint;
+    std::vector<int> pointIdxRadiusSearch;
+    std::vector<float> pointRadiusSquaredDistance;
+    std::vector<float> data;
 
     switch(status){
         case REGENERATE:
@@ -31,9 +40,31 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             }
             offset_force = offset_force / offset_force.norm();
             total_force += offset_force * kp1;
-        
             total_force += pose;
+
+            searchPoint.x = total_force.x();
+            searchPoint.y = total_force.y();
+            searchPoint.z = 0;
             
+            while (kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
+                ROS_INFO("Have Obstacle! Repush!");
+                for (const auto& point : cloud.points) {
+                    Eigen::Vector3f point_vec(point.x, point.y, point.z);
+                    point_vec -= pose;
+                    bias_force += point_vec;
+                }
+                total_force += (bias_force / bias_force.norm()) * kp1;
+
+                searchPoint.x = total_force.x();
+                searchPoint.y = total_force.y();
+                searchPoint.z = 0;
+
+                pointIdxRadiusSearch.clear();
+                pointIdxRadiusSearch.shrink_to_fit();
+                pointRadiusSquaredDistance.clear();
+                pointRadiusSquaredDistance.shrink_to_fit();
+            }
+
             total_force.y() < ed_right ? ed_right : total_force.y();
             total_force.y() > ed_left ? ed_left : total_force.y();
             total_force.x() > ed_ceil ? ed_ceil : total_force.x();
@@ -41,6 +72,9 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
         
             std::cout << "Total repulsive force: " << total_force.transpose() << std::endl;
             
+            data = {total_force.x(), total_force.y()};
+            can.sendData(0x105, data, 8);
+
             goal.pose.position.x = total_force.x();
             goal.pose.position.y = total_force.y();
             goal.pose.position.z = 0;
@@ -97,17 +131,9 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             total_force += pose;
 
             // 半径搜索
-            pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>(cloud));
-            kdtree.setInputCloud(cloud_ptr);
-            pcl::PointXYZ searchPoint;
             searchPoint.x = total_force.x();
             searchPoint.y = total_force.y();
             searchPoint.z = 0;
-            std::vector<int> pointIdxRadiusSearch;
-            std::vector<float> pointRadiusSquaredDistance;
-
-            Eigen::Vector3f bias_force(0.0, 0.0, 0.0);
 
             if (kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
                 ROS_INFO("Have Obstacle! Repush!");
@@ -135,7 +161,7 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             std::cout << "Speed Feed Forward: " << speedFeedForward.transpose() << std::endl;
             std::cout << "Motion force: " << total_force.transpose() << std::endl;
             
-            std::vector<float> data = {total_force.x(), total_force.y()};
+            data = {total_force.x(), total_force.y()};
             can.sendData(0x105, data, 8);
 
             goal.pose.position.x = total_force.x();

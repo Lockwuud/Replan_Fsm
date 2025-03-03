@@ -10,7 +10,7 @@
         <param name="ed_ceil" value="14.7175"/>
         <param name="ed_floor" value="-0.2825"/>
         
-        <param name="radius" value="1.5"/>      <!-- 搜索半径 -->
+        <param name="radius" value="1.0"/>      <!-- 搜索半径 -->
         <param name="delay" value="0.7"/>     <!-- motion延时补偿 -->
     </node>
 
