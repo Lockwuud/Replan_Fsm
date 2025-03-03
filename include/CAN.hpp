@@ -33,9 +33,9 @@
 #include "SharedStatus.hpp"   // 包含状态机状态定义
 
 // 连接系统命令echo "your_password" | sudo -S command_to_run
-#define ip_cmd_set_can0_params "echo 1 | sudo -S ip link set can0 type can bitrate 1000000 dbitrate 2000000 fd on"
-#define ip_cmd_can0_up "echo 1 | sudo -S ip link set can0 up"
-#define ip_cmd_can0_down "echo 1 | sudo -S ip link set can0 down"
+#define ip_cmd_set_can0_params "echo 6 | sudo -S ip link set can0 type can bitrate 1000000 dbitrate 2000000 fd on"
+#define ip_cmd_can0_up "echo 6 | sudo -S ip link set can0 up"
+#define ip_cmd_can0_down "echo 6 | sudo -S ip link set can0 down"
 
 // 异步接收线程池大小
 #define thread_nums 2

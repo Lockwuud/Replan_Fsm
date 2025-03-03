@@ -319,33 +319,6 @@ void usbCANFD::customReceive_1(const canfd_frame &frame)
 
     diraction = (Diraction)n;   // 看看能不能替代丑陋的switch
 
-    // switch (n)  
-    // {
-    // case 0x1:
-    //     diraction = UPLEFT;
-    //     break;
-    // case 0x2:
-    //     diraction = UPRIGHT;
-    //     break;
-    // case 0x3:
-    //     diraction = DOWNLEFT;
-    //     break;
-    // case 0x4:
-    //     diraction = DOWNRIGHT;
-    //     break;
-    // case 0x5:
-    //     diraction = LEFT;
-    //     break;
-    // case 0x6:
-    //     diraction = RIGHT;
-    //     break;
-    // case 0x7:
-    //     diraction = DOWN;
-    //     break;
-    // default:
-    //     ROS_INFO("!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    //     break;
-    // }
     status = CALL;
 }
 

@@ -57,30 +57,37 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
                 case UPLEFT:
                     preset_force.x() = sqrt1_2 * kp2;
                     preset_force.y() = sqrt1_2 * kp2;
+                    std::cout << "Diraction: UPLEFT" << std::endl;
                     break;
                 case UPRIGHT:
                     preset_force.x() = sqrt1_2 * kp2;
                     preset_force.y() = -sqrt1_2 * kp2;
+                    std::cout << "Diraction: UPRIGHT" << std::endl;
                     break;
                 case DOWNLEFT:
                     preset_force.x() = -sqrt1_2 * kp2;
                     preset_force.y() = sqrt1_2 * kp2;
+                    std::cout << "Diraction: DOWNLEFT" << std::endl;
                     break;
                 case DOWNRIGHT:
                     preset_force.x() = -sqrt1_2 * kp2;
                     preset_force.y() = -sqrt1_2 * kp2;
+                    std::cout << "Diraction: DOWNRIGHT" << std::endl;
                     break;
                 case LEFT:
                     preset_force.x() = 0;
                     preset_force.y() = kp2;
+                    std::cout << "Diraction: LEFT" << std::endl;
                     break;
                 case RIGHT:
                     preset_force.x() = 0;
                     preset_force.y() = -kp2;
+                    std::cout << "Diraction: RIGHT" << std::endl;
                     break;
                 case DOWN:
                     preset_force.x() = -kp2;
                     preset_force.y() = 0;
+                    std::cout << "Diraction: DOWN" << std::endl;
                     break;
                 default:
                     break;
@@ -123,8 +130,14 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             total_force.x() > ed_ceil ? ed_ceil : total_force.x();
             total_force.x() < ed_floor ? ed_floor : total_force.x();
         
+            std::cout << "Pose: " << pose.transpose() << std::endl;
+            std::cout << "Velocity: " << velocity.transpose() << std::endl;
+            std::cout << "Speed Feed Forward: " << speedFeedForward.transpose() << std::endl;
             std::cout << "Motion force: " << total_force.transpose() << std::endl;
             
+            std::vector<float> data = {total_force.x(), total_force.y()};
+            can.sendData(0x105, data, 8);
+
             goal.pose.position.x = total_force.x();
             goal.pose.position.y = total_force.y();
             goal.pose.position.z = 0.0;
