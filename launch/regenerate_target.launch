@@ -5,12 +5,12 @@
         <param name="kp2" value="2.0"/>         <!-- 引力向量长度，即平移距离（m）-->
         <param name="kp3" value="2.0"/>         <!-- motion斥力系数 -->
 
-        <param name="ed_left" value="7.7175"/>
+        <param name="ed_left" value="6.7175"/>
         <param name="ed_right" value="-0.2825"/>
         <param name="ed_ceil" value="14.7175"/>
         <param name="ed_floor" value="-0.2825"/>
         
-        <param name="radius" value="1.0"/>      <!-- 搜索半径 -->
+        <param name="radius" value="0.5"/>      <!-- 搜索半径 -->
         <param name="delay" value="0.7"/>     <!-- motion延时补偿 -->
     </node>
 

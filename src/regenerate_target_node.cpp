@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-03-03 09:31:26
+ * @LastEditTime : 2025-03-04 19:16:15
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 
@@ -36,9 +36,9 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             for (const auto& point : cloud.points) {
                 Eigen::Vector3f point_vec(point.x, point.y, point.z);
                 point_vec -= pose;
-                offset_force += point_vec;
+                offset_force += point_vec / point_vec.norm() * point_vec.norm();
             }
-            offset_force = offset_force / offset_force.norm();
+            offset_force /= offset_force.norm();
             total_force += offset_force * kp1;
             total_force += pose;
 
@@ -50,8 +50,8 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
                 ROS_INFO("Have Obstacle! Repush!");
                 for (const auto& point : cloud.points) {
                     Eigen::Vector3f point_vec(point.x, point.y, point.z);
-                    point_vec -= pose;
-                    bias_force += point_vec;
+                    point_vec -= total_force;
+                    bias_force += point_vec / point_vec.norm() * point_vec.norm();
                 }
                 total_force += (bias_force / bias_force.norm()) * kp1;
 
@@ -82,7 +82,7 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             status = PUBLISHED;
             break;
             
-        case RECALL:
+        case RECALL:        // make a feint repulsive force
             struct timeval sTime, eTime;
             gettimeofday(&sTime, NULL);
 
@@ -135,14 +135,23 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             searchPoint.y = total_force.y();
             searchPoint.z = 0;
 
-            if (kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
+            while (kdtree.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 ){
                 ROS_INFO("Have Obstacle! Repush!");
                 for (const auto& point : cloud.points) {
                     Eigen::Vector3f point_vec(point.x, point.y, point.z);
-                    point_vec -= pose;
-                    bias_force += point_vec;
+                    point_vec -= total_force;
+                    bias_force += point_vec / point_vec.norm() * point_vec.norm();
                 }
                 total_force += (bias_force / bias_force.norm()) * kp3;
+
+                searchPoint.x = total_force.x();
+                searchPoint.y = total_force.y();
+                searchPoint.z = 0;
+
+                pointIdxRadiusSearch.clear();
+                pointIdxRadiusSearch.shrink_to_fit();
+                pointRadiusSquaredDistance.clear();
+                pointRadiusSquaredDistance.shrink_to_fit();
             }
             
             gettimeofday(&eTime, NULL);
