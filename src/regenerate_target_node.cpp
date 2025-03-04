@@ -4,7 +4,7 @@
  * @Author       : hejia 2736463842@qq.com
  * @Version      : 0.0.1
  * @LastEditors  : hejia 2736463842@qq.com
- * @LastEditTime : 2025-03-04 19:16:15
+ * @LastEditTime : 2025-03-04 21:00:43
  * @Copyright    : G AUTOMOBILE RESEARCH INSTITUTE CO.,LTD Copyright (c) 2025.
 **/
 
@@ -65,10 +65,10 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
                 pointRadiusSquaredDistance.shrink_to_fit();
             }
 
-            total_force.y() < ed_right ? ed_right : total_force.y();
-            total_force.y() > ed_left ? ed_left : total_force.y();
-            total_force.x() > ed_ceil ? ed_ceil : total_force.x();
-            total_force.x() < ed_floor ? ed_floor : total_force.x();
+            total_force.y() = total_force.y() < ed_right ? ed_right : total_force.y();
+            total_force.y() = total_force.y() > ed_left ? ed_left : total_force.y();
+            total_force.x() = total_force.x() > ed_ceil ? ed_ceil : total_force.x();
+            total_force.x() = total_force.x() < ed_floor ? ed_floor : total_force.x();
         
             std::cout << "Total repulsive force: " << total_force.transpose() << std::endl;
             
@@ -160,10 +160,10 @@ void cloud_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
             speedFeedForward = velocity * (float(exeTime) + delay);
             total_force += speedFeedForward;
 
-            total_force.y() < ed_right ? ed_right : total_force.y();
-            total_force.y() > ed_left ? ed_left : total_force.y();
-            total_force.x() > ed_ceil ? ed_ceil : total_force.x();
-            total_force.x() < ed_floor ? ed_floor : total_force.x();
+            total_force.y() = total_force.y() < ed_right ? ed_right : total_force.y();
+            total_force.y() = total_force.y() > ed_left ? ed_left : total_force.y();
+            total_force.x() = total_force.x() > ed_ceil ? ed_ceil : total_force.x();
+            total_force.x() = total_force.x() < ed_floor ? ed_floor : total_force.x();
         
             std::cout << "Pose: " << pose.transpose() << std::endl;
             std::cout << "Velocity: " << velocity.transpose() << std::endl;
